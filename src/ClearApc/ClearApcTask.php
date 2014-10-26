@@ -45,10 +45,17 @@ class ClearApcTask extends AbstractTask
      */
     public function execute()
     {
-        $this->hostname = $this->connections->getOption('host');
+        $this->hostname = $this->config->get(sprintf('remote.connections.%s.%s.host',
+            $this->connections->getConnection(),
+            $this->connections->getServer()
+        ));
 
         $file = $this->createApcFile();
-        $this->callApcFile($file);
+
+        if ($file === false)
+            return false;
+
+        return $this->callApcFile($file);
     }
 
     private function callApcFile($filename)
@@ -73,7 +80,7 @@ class ClearApcTask extends AbstractTask
 
         $this->removeApcFile($filename);
         if (!$result) {
-            throw new \RuntimeException(sprintf('Unable to read %s, does the host resove?', $url));
+            return $this->halt(sprintf('Unable to read %s, does the host resove?', $url));
         }
 
         if ($result['success']) {
@@ -96,16 +103,16 @@ class ClearApcTask extends AbstractTask
     private function createApcFile()
     {
         $webPath = $this->getWebPath();
-        if (!is_dir($webPath)) {
-            throw new \InvalidArgumentException(sprintf('Web dir does not exist "%s"', $webPath));
+        if (!$this->command->option('pretend') && !is_dir($webPath)) {
+            return $this->halt(sprintf('Web dir does not exist "%s"', $webPath));
         }
 
-        if (!is_writable($webPath)) {
-            throw new \InvalidArgumentException(sprintf('Web dir is not writeable "%s"', $webPath));
+        if (!$this->command->option('pretend') && !is_writable($webPath)) {
+            return $this->halt(sprintf('Web dir is not writeable "%s"', $webPath));
         }
 
         $template = file_get_contents(__DIR__ . '/../Resources/clear_apc.php.tpl');
-        $code = strstr($template, array(
+        $code = strtr($template, array(
             '%user%' => var_export($this->getClearUserCache(), true),
             '%opcode%' => var_export($this->getClearApcCache(), true)
         ));
@@ -120,7 +127,7 @@ class ClearApcTask extends AbstractTask
         }
 
         if (false === @file_put_contents($path, $code)) {
-            throw new \RuntimeException(sprintf('Unable to write to file "%s"', $path));
+            return $this->halt(sprintf('Unable to write to file "%s"', $path));
         }
 
         return $filename;
@@ -145,8 +152,8 @@ class ClearApcTask extends AbstractTask
      */
     public function getWebPath()
     {
-        return $this->releasesManager->getCurrentReleasePath()
-            . $this->getWebDir();
+        return $this->releasesManager->getCurrentReleasePath() . DIRECTORY_SEPARATOR
+        . $this->getWebDir();
     }
 
     /**
