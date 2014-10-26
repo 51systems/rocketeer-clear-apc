@@ -64,7 +64,7 @@ class ClearApcTask extends AbstractTask
 
         $this->command->info(sprintf('Calling URL "%s" to clear apc cache', $url));
         if ($this->command->option('pretend')) {
-            return;
+            return true;
         }
 
         $result = false;
@@ -85,8 +85,10 @@ class ClearApcTask extends AbstractTask
 
         if ($result['success']) {
             $this->command->info('APC Cache Plugin: ' . $result['message']);
+            return true;
         } else {
             $this->command->error('Could not clear APC cache: ' . $result['message']);
+            return false;
         }
     }
 
