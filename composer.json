@@ -10,11 +10,10 @@
             "name": "Dustin Thomson",
             "email": "dthomson@51systems.com"
         },
-
         {
             "name": "Thibault Duplessis",
             "homepage": "https://github.com/ornicar"
-        },
+        }
     ],
     "require": {
         "php": ">=5.4.0",
