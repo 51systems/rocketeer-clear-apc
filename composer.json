@@ -1,0 +1,28 @@
+{
+    "name": "51systems/rocketeer-clear-apc",
+    "description": "Rocketeer plugin to clear the apc cache.",
+    "keywords": [
+        "rocketeer",
+        "APC"
+    ],
+    "authors": [
+        {
+            "name": "Dustin Thomson",
+            "email": "dthomson@51systems.com"
+        },
+
+        {
+            "name": "Thibault Duplessis",
+            "homepage": "https://github.com/ornicar"
+        },
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "anahkiasen/rocketeer": "~2.0."
+    },
+    "autoload": {
+        "psr-4": {
+            "ClearApc\\Rocketeer": "src/ClearApc"
+        }
+    }
+}
