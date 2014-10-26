@@ -45,12 +45,12 @@ class ClearApcTask extends AbstractTask
      */
     public function execute()
     {
-        $webDir = $this->rocketeer['config']->get('rocketeer-clear-apc::web_dir');
+        $webDir = $this->config->get('rocketeer-clear-apc::web_dir');
         $this->webDir = $this->releasesManager->getCurrentReleasePath()
             . rtrim($webDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
 
-        $this->clearUserCache = $this->rocketeer['config']->get('rocketeer-clear-apc::clear_user_cache');
-        $this->clearApcCache = $this->rocketeer['config']->get('rocketeer-clear-apc::clear_apc_cache');
+        $this->clearUserCache = $this->config->get('rocketeer-clear-apc::clear_user_cache');
+        $this->clearApcCache = $this->config->get('rocketeer-clear-apc::clear_apc_cache');
         $this->connections->getOption('host');
 
         $file = $this->createApcFile();
