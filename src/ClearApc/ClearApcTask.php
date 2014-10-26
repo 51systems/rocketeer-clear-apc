@@ -45,13 +45,7 @@ class ClearApcTask extends AbstractTask
      */
     public function execute()
     {
-        $webDir = $this->config->get('rocketeer-clear-apc::web_dir');
-        $this->webDir = $this->releasesManager->getCurrentReleasePath()
-            . rtrim($webDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-
-        $this->clearUserCache = $this->config->get('rocketeer-clear-apc::clear_user_cache');
-        $this->clearApcCache = $this->config->get('rocketeer-clear-apc::clear_apc_cache');
-        $this->connections->getOption('host');
+        $this->hostname = $this->connections->getOption('host');
 
         $file = $this->createApcFile();
         $this->callApcFile($file);
@@ -86,7 +80,7 @@ class ClearApcTask extends AbstractTask
 
     private function removeApcFile($filename)
     {
-        unlink($this->webDir . $filename);
+        unlink($this->getWebPath() . $filename);
     }
 
     /**
@@ -96,22 +90,23 @@ class ClearApcTask extends AbstractTask
      */
     private function createApcFile()
     {
-        if (!is_dir($this->webDir)) {
-            throw new \InvalidArgumentException(sprintf('Web dir does not exist "%s"', $this->webDir));
+        $webPath = $this->getWebPath();
+        if (!is_dir($webPath)) {
+            throw new \InvalidArgumentException(sprintf('Web dir does not exist "%s"', $webPath));
         }
 
-        if (!is_writable($this->webDir)) {
-            throw new \InvalidArgumentException(sprintf('Web dir is not writeable "%s"', $this->webDir));
+        if (!is_writable($webPath)) {
+            throw new \InvalidArgumentException(sprintf('Web dir is not writeable "%s"', $webPath));
         }
 
         $template = file_get_contents(__DIR__ . '/../Resources/clear_apc.php.tpl');
         $code = strstr($template, array(
-            '%user%' => var_export($this->clearUserCache, true),
-            '%opcode%' => var_export($this->clearApcCache, true)
+            '%user%' => var_export($this->getClearUserCache(), true),
+            '%opcode%' => var_export($this->getClearApcCache(), true)
         ));
 
         $filename = 'apc-' . md5(uniqid().php_uname()) . '.php';
-        $path = $this->webDir.$filename;
+        $path = $webPath.$filename;
 
 
         if (false === @file_put_contents($path, $code)) {
@@ -119,5 +114,74 @@ class ClearApcTask extends AbstractTask
         }
 
         return $filename;
+    }
+
+    /**
+     * @return string
+     */
+    public function getWebDir()
+    {
+        $webDir = $this->webDir;
+
+        if ($webDir == null)
+            $webDir = $this->config->get('rocketeer-clear-apc::web_dir');
+
+        return rtrim($webDir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    }
+
+    /**
+     * Returns the full path to the web directory.
+     * @return string
+     */
+    public function getWebPath()
+    {
+        return $this->releasesManager->getCurrentReleasePath()
+            . $this->getWebDir();
+    }
+
+    /**
+     * @param string $webDir
+     */
+    public function setWebDir($webDir)
+    {
+        $this->webDir = $webDir;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getClearApcCache()
+    {
+        if (isset($this->clearApcCache))
+            return $this->clearApcCache;
+
+        return $this->config->get('rocketeer-clear-apc::clear_apc_cache');
+    }
+
+    /**
+     * @param boolean $clearApcCache
+     */
+    public function setClearApcCache($clearApcCache)
+    {
+        $this->clearApcCache = $clearApcCache;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getClearUserCache()
+    {
+        if (isset($this->clearUserCache))
+            return $this->clearUserCache;
+
+        return $this->config->get('rocketeer-clear-apc::clear_user_cache');
+    }
+
+    /**
+     * @param boolean $clearUserCache
+     */
+    public function setClearUserCache($clearUserCache)
+    {
+        $this->clearUserCache = $clearUserCache;
     }
 }
