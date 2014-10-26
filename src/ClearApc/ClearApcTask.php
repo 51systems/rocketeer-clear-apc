@@ -67,6 +67,9 @@ class ClearApcTask extends AbstractTask
             return true;
         }
 
+        //Give some time for the file to become available.
+        sleep(10);
+
         $result = false;
 
         //Try 5 times to get the file.
