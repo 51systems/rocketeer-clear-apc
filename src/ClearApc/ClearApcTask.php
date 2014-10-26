@@ -71,7 +71,7 @@ class ClearApcTask extends AbstractTask
 
         //Try 5 times to get the file.
         for($i=0; $i<5; ++$i) {
-            if ($result == @file_get_contents($url, false, null)) {
+            if ($result = file_get_contents($url)) {
                 break;
             } else {
                 sleep(1);
@@ -82,6 +82,8 @@ class ClearApcTask extends AbstractTask
         if (!$result) {
             return $this->halt(sprintf('Unable to read %s, does the host resove?', $url));
         }
+
+        $result = json_decode($result, true);
 
         if ($result['success']) {
             $this->command->info('APC Cache Plugin: ' . $result['message']);
@@ -94,7 +96,7 @@ class ClearApcTask extends AbstractTask
 
     private function removeApcFile($filename)
     {
-        unlink($this->getWebPath() . $filename);
+        return $this->run('rm -f ' . $this->getWebPath() . $filename);
     }
 
     /**
@@ -105,12 +107,9 @@ class ClearApcTask extends AbstractTask
     private function createApcFile()
     {
         $webPath = $this->getWebPath();
-        if (!$this->command->option('pretend') && !is_dir($webPath)) {
-            return $this->halt(sprintf('Web dir does not exist "%s"', $webPath));
-        }
 
-        if (!$this->command->option('pretend') && !is_writable($webPath)) {
-            return $this->halt(sprintf('Web dir is not writeable "%s"', $webPath));
+        if (!$this->command->option('pretend') && !$this->directoryExists($webPath)) {
+            return $this->halt(sprintf('Web dir does not exist "%s"', $webPath));
         }
 
         $template = file_get_contents(__DIR__ . '/../Resources/clear_apc.php.tpl');
@@ -128,9 +127,7 @@ class ClearApcTask extends AbstractTask
             return $filename;
         }
 
-        if (false === @file_put_contents($path, $code)) {
-            return $this->halt(sprintf('Unable to write to file "%s"', $path));
-        }
+        $this->putFile($path, $code);
 
         return $filename;
     }
@@ -202,5 +199,19 @@ class ClearApcTask extends AbstractTask
     public function setClearUserCache($clearUserCache)
     {
         $this->clearUserCache = $clearUserCache;
+    }
+
+    /**
+     * Checks if a directory exists.
+     *
+     *
+     * @param $dir
+     * @return bool
+     */
+    public function directoryExists($dir)
+    {
+        $exists = $this->runRaw('[ -d '.$dir.' ] && echo "true"');
+
+        return trim($exists) == 'true';
     }
 }
