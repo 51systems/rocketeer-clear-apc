@@ -55,6 +55,11 @@ class ClearApcTask extends AbstractTask
     {
         $url = 'http://' . $this->hostname . '/' . $filename;
 
+        $this->command->info(sprintf('Calling URL "%s" to clear apc cache', $url));
+        if ($this->command->option('pretend')) {
+            return;
+        }
+
         $result = false;
 
         //Try 5 times to get the file.
@@ -108,6 +113,11 @@ class ClearApcTask extends AbstractTask
         $filename = 'apc-' . md5(uniqid().php_uname()) . '.php';
         $path = $webPath.$filename;
 
+        $this->command->info(sprintf('writing apc clearing file to "%s"', $path));
+
+        if ($this->command->option('pretend')) {
+            return $filename;
+        }
 
         if (false === @file_put_contents($path, $code)) {
             throw new \RuntimeException(sprintf('Unable to write to file "%s"', $path));
