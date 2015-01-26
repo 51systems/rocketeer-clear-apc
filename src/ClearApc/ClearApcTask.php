@@ -77,7 +77,7 @@ class ClearApcTask extends AbstractTask
             if ($result = file_get_contents($url)) {
                 break;
             } else {
-                sleep(10);
+                sleep(30);
             }
         }
 
